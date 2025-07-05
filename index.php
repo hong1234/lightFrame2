@@ -19,8 +19,13 @@ $app = new Framework\Core();
 //$app->map('/', 'home');
 //$app->map('/about', 'about');
 
-$app->map('/', function () { return new Response('This is the home page');});
-$app->map('/about', function () { return new Response('This is the about page');});
+$app->map('/', function () { 
+    return new Response('This is the home page');
+});
+
+$app->map('/about', function () { 
+    return new Response('This is the about page');
+});
 
 $app->map('/hello/{name}', function ($name) {
 	return new Response('Hello '.$name);

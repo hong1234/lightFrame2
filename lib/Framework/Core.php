@@ -16,34 +16,36 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Framework\Event\RequestEvent;
 
 
-class Core implements HttpKernelInterface
-{
+class Core implements HttpKernelInterface {
+
 	protected $routes = array();
-        protected $dispatcher;
+    protected $dispatcher;
 
-        public function __construct()
-    	{
-                $this->routes = new RouteCollection();
-                $this->dispatcher = new EventDispatcher();
-    	}
+    public function __construct() {
+        $this->routes = new RouteCollection();
+        $this->dispatcher = new EventDispatcher();
+    }
 
-	public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
-	{
-                $event = new RequestEvent();
-                $event->setRequest($request);
-                $this->dispatcher->dispatch('request', $event);
+	public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true) {
+        $event = new RequestEvent();
+        $event->setRequest($request);
+        $this->dispatcher->dispatch('request', $event);
 
 		// create a context using the current request
 		$context = new RequestContext();
 		$context->fromRequest($request);
 		$matcher = new UrlMatcher($this->routes, $context);
 
-                try {
+        try {
 			$attributes = $matcher->match($request->getPathInfo());
 			$controller = $attributes['controller'];
 			
-                        unset($attributes['controller']);
-			$response = call_user_func_array($controller, $attributes);
+            unset($attributes['controller']);
+			$response = call_user_func_array(
+				$controller, 
+				array_values($attributes) // php 8+
+				// $attributes // php 7+
+			);
 
 		} catch (ResourceNotFoundException $e) {
 			$response = new Response('Not found!', Response::HTTP_NOT_FOUND);
@@ -56,9 +58,8 @@ class Core implements HttpKernelInterface
 		$this->routes->add($path, new Route( $path, array('controller' => $controller)));
 	}
 
-        public function on($event, $callback)
-    	{
-        	$this->dispatcher->addListener($event, $callback);
-    	}
+    public function on($event, $callback) {
+        $this->dispatcher->addListener($event, $callback);
+    }
 
 }
